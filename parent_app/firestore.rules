@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only access their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Parents can only read their own children's data
+    match /children/{childId} {
+      allow read: if request.auth != null && 
+        resource.data.parentId == request.auth.uid;
+      allow write: if false; // Only admins can modify children data
+    }
+    
+    // Parents can read bus data for their children's routes
+    match /buses/{busId} {
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/children/$(getChildForParent()));
+      allow write: if false; // Only bus drivers/admins can update
+    }
+    
+    // Bus stops are read-only for parents
+    match /busStops/{stopId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admins can modify
+    }
+    
+    // Routes are read-only for parents
+    match /routes/{routeId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admins can modify
+    }
+    
+    // Parents can read trip history for their children
+    match /tripHistory/{tripId} {
+      allow read: if request.auth != null && 
+        resource.data.childId in getParentChildren();
+      allow write: if false; // System generated only
+    }
+    
+    // Helper function to get children for authenticated parent
+    function getParentChildren() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.children;
+    }
+    
+    function getChildForParent() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.children[0];
+    }
+  }
+}
