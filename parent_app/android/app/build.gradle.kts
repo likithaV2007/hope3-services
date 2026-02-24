@@ -47,7 +47,7 @@ flutter {
 
 dependencies {
   // Import the Firebase BoM
-  implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+  implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
 
   // Firebase Auth
   implementation("com.google.firebase:firebase-auth")

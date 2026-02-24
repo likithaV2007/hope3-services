@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
-import '../models/child_model.dart';
-import '../providers/tracking_provider.dart';
 import 'tracking_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -74,7 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: Offset(0, 2),
               ),
@@ -122,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -134,7 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -227,8 +224,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             boxShadow: [
               BoxShadow(
                 color: isSelected
-                    ? AppColors.primary.withOpacity(0.15)
-                    : Colors.black.withOpacity(0.05),
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: isSelected ? 12 : 8,
                 offset: Offset(0, 2),
               ),
@@ -279,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -326,7 +323,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: Offset(0, 4),
           ),

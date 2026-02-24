@@ -4,6 +4,7 @@ import 'dashboard_screen.dart';
 import 'tracking_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
+import 'voice_test_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   final String parentId;
@@ -26,6 +27,7 @@ class _MainNavigationState extends State<MainNavigation> {
       DashboardScreen(parentId: widget.parentId),
       TrackingScreen(parentId: widget.parentId),
       HistoryScreen(parentId: widget.parentId),
+      VoiceTestScreen(), // Voice test screen
       SettingsScreen(),
     ];
   }
@@ -72,7 +74,12 @@ class _MainNavigationState extends State<MainNavigation> {
             BottomNavigationBarItem(
               icon: Icon(Icons.history_outlined),
               activeIcon: Icon(Icons.history),
-              label: 'Notifications',
+              label: 'History',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.volume_up_outlined),
+              activeIcon: Icon(Icons.volume_up),
+              label: 'Voice Test',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

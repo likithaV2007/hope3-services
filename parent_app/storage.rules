@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Voice notifications - publicly readable for testing
+    // In production, restrict to authenticated users
+    match /voice_notifications/{allPaths=**} {
+      allow read; // Public read for testing
+      allow write: if request.auth != null && request.auth.token.admin == true; // Only admins can upload
+    }
+    
+    // Production rules (uncomment when ready)
+    /*
+    match /voice_notifications/{allPaths=**} {
+      allow read: if request.auth != null; // Only authenticated users
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    */
+    
+    // Default rules for other files
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

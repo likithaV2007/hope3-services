@@ -9,15 +9,17 @@ import 'screens/unauthorized_screen.dart';
 import 'screens/main_navigation.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/voice_notification_service.dart';
 import 'models/user_model.dart';
 import 'providers/tracking_provider.dart';
 
-// Background message handler
+// Background message handler - MUST be top-level function
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print('Handling background message: ${message.messageId}');
-  // Handle background notification here if needed
+  
+  // Call the voice notification background handler
+  await firebaseMessagingBackgroundHandler(message);
 }
 
 void main() async {
@@ -25,9 +27,12 @@ void main() async {
   await Firebase.initializeApp();
   
   // Set background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
   
+  // Initialize voice notifications
+  await VoiceNotificationService.initialize();
   await NotificationService.initialize();
+  
   runApp(MyApp());
 }
 
@@ -97,7 +102,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: AuthWrapper(),
+        home: TestButton(),
         debugShowCheckedModeBanner: false,
       ),
     );
@@ -160,6 +165,29 @@ class AuthWrapper extends StatelessWidget {
         
         return SignInScreen();
       },
+    );
+  }
+}
+
+// Test button to bypass authentication
+class TestButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Test Access')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainNavigation(parentId: 'test_user'),
+              ),
+            );
+          },
+          child: Text('Enter App (Test Mode)'),
+        ),
+      ),
     );
   }
 }

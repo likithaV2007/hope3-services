@@ -5,9 +5,7 @@ import '../models/bus_model.dart';
 import '../models/bus_stop_model.dart';
 import '../models/trip_history_model.dart';
 import '../services/bus_service.dart';
-import '../services/child_service.dart';
 import '../services/eta_service.dart';
-import '../services/offline_service.dart';
 
 class TrackingProvider extends ChangeNotifier {
   final BusService _busService = BusService();

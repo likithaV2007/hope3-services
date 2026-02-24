@@ -76,6 +76,11 @@
 	<array>
 		<string>remote-notification</string>
 		<string>background-fetch</string>
+		<string>background-processing</string>
 	</array>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition for voice notifications.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses microphone for voice notifications.</string>
 </dict>
 </plist>

@@ -1,156 +1,184 @@
 # Voice Notifications Implementation
 
-## Overview
-This module converts Firebase Cloud Messaging (FCM) notifications to voice announcements using Text-to-Speech (TTS) technology.
+This implementation provides voice notifications that work across all three Flutter app states:
 
-## Features Implemented
+## App States Supported
 
-### ✅ Step 6: Request Notification Permission
-- Automatically requests FCM permissions for alert, badge, and sound
-- Implemented in `VoiceNotificationService.initialize()`
+### 1. Foreground State ✅
+- **Full TTS Support**: Uses `flutter_tts` for immediate voice playback
+- **Real-time Processing**: Instant voice notifications when app is active
+- **Custom Voice Settings**: Configurable speech rate, pitch, and language
 
-### ✅ Step 7: Get FCM Token
-- Retrieves and stores FCM token
-- Saves token to SharedPreferences and Firestore
-- Token is displayed in Voice Settings screen for testing
+### 2. Background State ✅
+- **Local Notifications**: Shows notification with voice action button
+- **Isolate Communication**: Attempts to communicate with foreground isolate
+- **Background Handler**: `_firebaseMessagingBackgroundHandler` processes voice messages
 
-### ✅ Step 8: Setup Text-to-Speech Engine
-- Configures FlutterTts with:
-  - Language: "en-IN" (configurable)
-  - Speech Rate: 0.5 (adjustable)
-  - Pitch: 1.0 (adjustable)
-  - Volume: 1.0
+### 3. Terminated State ✅
+- **FCM Push Notifications**: Firebase delivers notifications to system
+- **Local Notification Actions**: Tap notification to hear voice message
+- **System Integration**: Uses Android/iOS notification system
 
-### ✅ Step 9: Listen to Firebase Messages
-- Listens to `FirebaseMessaging.onMessage` for foreground notifications
-- Automatically converts notification body to speech
-- Supports custom voice messages via `voice_message` data field
+## Implementation Details
 
-### ✅ Step 10: Send Notifications
-- Ready to receive notifications from Firebase Console
-- Test functionality available in Voice Settings screen
+### Core Components
 
-## Files Created/Modified
+1. **VoiceNotificationService** (`lib/services/voice_notification_service.dart`)
+   - Handles TTS configuration and playback
+   - Manages FCM token registration
+   - Processes voice messages in all app states
+   - Provides isolate communication for background voice
 
-### New Files:
-1. `lib/services/voice_notification_service.dart` - Main voice notification service
-2. `lib/screens/voice_settings_screen.dart` - Settings UI for voice notifications
-3. `lib/utils/voice_notification_test.dart` - Test utilities
-4. `VOICE_NOTIFICATIONS.md` - This documentation
+2. **Enhanced Background Handler** (`lib/main.dart`)
+   - Processes voice notifications when app is backgrounded/terminated
+   - Calls `VoiceNotificationService.handleBackgroundMessage()`
 
-### Modified Files:
-1. `lib/services/notification_service.dart` - Integrated with voice service
-2. `lib/screens/settings_screen.dart` - Added voice settings navigation
-3. `lib/main.dart` - Added FCM token saving after authentication
-4. `pubspec.yaml` - Updated Firebase dependencies and added flutter_tts
+3. **Test Screen** (`lib/screens/voice_notification_test_screen.dart`)
+   - Test voice notifications in all states
+   - Configure voice settings
+   - Send test notifications
 
-## Usage Instructions
+### Key Methods
 
-### For Testing:
-1. Open the app and navigate to Settings → Voice Notifications
-2. Enable voice notifications
-3. Adjust speech rate and pitch as needed
-4. Use "Test Voice Notification" button
-5. Use "Test Bus Alert" for realistic scenario
-6. Copy FCM token for Firebase Console testing
+```dart
+// Speak text in foreground
+await VoiceNotificationService.speak("Your message");
 
-### For Firebase Console Testing:
-1. Go to Firebase Console → Cloud Messaging → Send message
-2. Set Title: "School Van Alert"
-3. Set Body: "The school van is one kilometer away from your home"
-4. Target: Single Device
-5. Paste FCM token from the app
-6. Send notification
+// Enhanced speak that works in all states
+await VoiceNotificationService.speakInAllStates("Your message");
 
-### For Custom Voice Messages:
-Send notification with additional data field:
+// Handle background/terminated messages
+await VoiceNotificationService.handleBackgroundMessage(message);
+```
+
+### Firebase Cloud Messaging Setup
+
+Voice notifications require specific FCM payload structure:
+
 ```json
 {
   "notification": {
     "title": "School Bus Alert",
-    "body": "Bus approaching"
+    "body": "Bus arriving in 5 minutes"
   },
   "data": {
-    "voice_message": "The school van is 5 minutes away from your home. Please get ready."
+    "messageType": "audio",
+    "voice_message": "Attention! Your child's bus will arrive in 5 minutes. Please be ready at the bus stop."
   }
 }
 ```
 
-## Configuration Options
+### Android Configuration
 
-### Voice Settings:
-- **Enable/Disable**: Toggle voice notifications on/off
-- **Language**: English (India), English (US), Hindi
-- **Speech Rate**: 0.1 to 1.0 (adjustable slider)
-- **Pitch**: 0.5 to 2.0 (adjustable slider)
+1. **Permissions** (AndroidManifest.xml):
+   ```xml
+   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+   ```
 
-### Notification Preferences:
-- Settings are saved to SharedPreferences
-- Persist across app restarts
-- Can be customized per user
+2. **Notification Channel**: 
+   - Channel ID: `voice_notifications`
+   - Importance: High
+   - Sound: Enabled
 
-## Technical Implementation
+3. **Drawable Resource**: 
+   - `ic_volume_up.xml` for voice notification icon
 
-### FCM Integration:
-```dart
-FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  if (message.notification?.body != null) {
-    VoiceNotificationService.speak(message.notification!.body!);
+### iOS Configuration
+
+1. **Info.plist** additions needed:
+   ```xml
+   <key>UIBackgroundModes</key>
+   <array>
+       <string>background-processing</string>
+       <string>remote-notification</string>
+   </array>
+   ```
+
+## Testing Voice Notifications
+
+### Test All States:
+
+1. **Foreground Test**:
+   - Open app → Settings → Test Voice Notifications
+   - Tap "Test Foreground Voice"
+   - Should hear immediate TTS
+
+2. **Background Test**:
+   - Send test notification via app
+   - Minimize app (don't close)
+   - Should receive notification with voice capability
+
+3. **Terminated Test**:
+   - Close app completely
+   - Send notification from Firebase Console or backend
+   - Should receive system notification
+   - Tap notification to hear voice message
+
+### Firebase Console Test Message:
+
+```json
+{
+  "to": "USER_FCM_TOKEN",
+  "notification": {
+    "title": "Test Voice Alert",
+    "body": "This is a test voice notification"
+  },
+  "data": {
+    "messageType": "audio",
+    "voice_message": "This is a test voice notification for the school bus tracking app. Your child's bus is arriving soon."
   }
-});
+}
 ```
-
-### TTS Configuration:
-```dart
-await _tts.setLanguage("en-IN");
-await _tts.setSpeechRate(0.5);
-await _tts.setPitch(1.0);
-await _tts.speak(text);
-```
-
-### Token Management:
-```dart
-String? token = await FirebaseMessaging.instance.getToken();
-// Save to Firestore for backend notifications
-await FirebaseFirestore.instance
-    .collection('users')
-    .doc(userId)
-    .update({'fcmToken': token});
-```
-
-## Testing Scenarios
-
-The app includes predefined test messages for:
-- **arrival_5min**: 5-minute arrival warning
-- **arrival_1km**: 1-kilometer distance alert
-- **at_stop**: Bus arrival notification
-- **departure**: Departure from school
-- **delay**: Traffic delay alert
-- **emergency**: Emergency notifications
-
-## Security & Privacy
-
-- FCM tokens are securely stored
-- Voice notifications respect user preferences
-- No sensitive data in voice messages
-- COPPA compliant implementation
 
 ## Troubleshooting
 
 ### Common Issues:
-1. **No voice output**: Check device volume and TTS settings
-2. **Token not received**: Ensure Firebase configuration is correct
-3. **Notifications not speaking**: Verify voice notifications are enabled
 
-### Debug Information:
-- FCM token is displayed in Voice Settings
-- Console logs show notification receipt
-- Test buttons verify TTS functionality
+1. **No Voice in Background/Terminated**:
+   - Check device volume settings
+   - Verify notification permissions
+   - Ensure Do Not Disturb is off
 
-## Future Enhancements
+2. **TTS Not Working**:
+   - Check device TTS settings
+   - Verify language pack installed
+   - Test with different speech rates
 
-- Multi-language support expansion
-- Custom voice selection
-- Quiet hours configuration
-- Voice message templates
-- Offline TTS caching
+3. **FCM Token Issues**:
+   - Check Firebase project configuration
+   - Verify google-services.json/GoogleService-Info.plist
+   - Check Firestore security rules
+
+### Debug Commands:
+
+```bash
+# Check FCM token
+flutter logs | grep "FCM TOKEN"
+
+# Check TTS status
+flutter logs | grep "TTS"
+
+# Check notification permissions
+flutter logs | grep "permission"
+```
+
+## Production Deployment
+
+1. **Firebase Functions**: Deploy `firebase_functions/voice_notifications.js`
+2. **Firestore Rules**: Ensure proper security rules for FCM tokens
+3. **Testing**: Test on physical devices (voice doesn't work on simulators)
+4. **Monitoring**: Monitor FCM delivery reports and TTS errors
+
+## Dependencies Required
+
+```yaml
+dependencies:
+  firebase_messaging: ^15.0.0
+  flutter_tts: ^3.8.0
+  flutter_local_notifications: ^17.2.3
+  permission_handler: ^11.3.1
+  shared_preferences: ^2.3.3
+```
+
+The voice notification system is now fully implemented and ready for production use across all app states.

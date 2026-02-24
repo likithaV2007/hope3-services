@@ -38,7 +38,7 @@ class _SignInScreenState extends State<SignInScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.4),
+                  color: AppColors.primary.withValues(alpha: 0.4),
                   blurRadius: 15,
                   offset: Offset(0, 8),
                 ),

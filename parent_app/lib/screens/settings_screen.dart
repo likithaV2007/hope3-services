@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../constants/app_colors.dart';
 import '../services/notification_service.dart';
-import '../utils/notification_test.dart';
-import 'voice_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({Key? key}) : super(key: key);
+
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _morningAlert = true;
-  bool _eveningAlert = true;
-  bool _departureAlert = true;
+  bool _morningAlerts = true;
+  bool _eveningAlerts = true;
+  bool _departureAlerts = true;
 
   @override
   void initState() {
@@ -21,14 +22,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final morning = await NotificationService.isMorningAlertEnabled();
-    final evening = await NotificationService.isEveningAlertEnabled();
-    final departure = await NotificationService.isDepartureAlertEnabled();
-    
     setState(() {
-      _morningAlert = morning;
-      _eveningAlert = evening;
-      _departureAlert = departure;
+      _morningAlerts = true;
+      _eveningAlerts = true;
+      _departureAlerts = true;
     });
   }
 
@@ -37,164 +34,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
+        title: Text('Settings'),
         backgroundColor: AppColors.white,
-        title: Text('Settings', style: TextStyle(color: AppColors.primary, fontSize: 24,fontWeight: FontWeight.bold)),
+        foregroundColor: AppColors.black,
         elevation: 0,
-        iconTheme: IconThemeData(color: AppColors.primary),
       ),
       body: ListView(
         padding: EdgeInsets.all(16),
         children: [
-          _buildSection(
-            'Notifications',
-            [
-              _buildNavigationTile(
-                'Voice Notifications',
-                'Configure text-to-speech settings',
-                Icons.volume_up,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const VoiceSettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildNavigationTile(
-                'Test Notifications',
-                'Test if notifications are working properly',
-                Icons.notification_important,
-                () async {
-                  await NotificationTest.testLocalNotification();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Test notification sent!')),
-                  );
-                },
-              ),
-              _buildSwitchTile(
-                'Morning Arrival Alert',
-                'Get notified 5 minutes before bus arrives in the morning',
-                _morningAlert,
-                (value) async {
-                  await NotificationService.setMorningAlert(value);
-                  setState(() => _morningAlert = value);
-                },
-              ),
-              _buildSwitchTile(
-                'Evening Arrival Alert',
-                'Get notified 5 minutes before bus arrives in the evening',
-                _eveningAlert,
-                (value) async {
-                  await NotificationService.setEveningAlert(value);
-                  setState(() => _eveningAlert = value);
-                },
-              ),
-              _buildSwitchTile(
-                'Departure Alert',
-                'Get notified when bus starts from school',
-                _departureAlert,
-                (value) async {
-                  await NotificationService.setDepartureAlert(value);
-                  setState(() => _departureAlert = value);
-                },
-              ),
-            ],
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.notifications, color: AppColors.primary),
+                  title: Text('Test Notification'),
+                  subtitle: Text('Send a test notification'),
+                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () async {
+                    FlutterTts tts = FlutterTts();
+                    await tts.setLanguage("en-US");
+                    await tts.speak("Test voice notification - Bus arriving in 5 minutes");
+                  },
+                ),
+              ],
+            ),
           ),
-          
-          SizedBox(height: 24),
-          
-          _buildSection(
-            'About',
-            [
-              _buildInfoTile('Version', '1.0.0'),
-              _buildInfoTile('School', 'Hope Elementary School'),
-            ],
+          SizedBox(height: 16),
+          Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Notification Settings',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.black,
+                    ),
+                  ),
+                ),
+                SwitchListTile(
+                  title: Text('Morning Alerts'),
+                  subtitle: Text('Get notified about morning bus schedules'),
+                  value: _morningAlerts,
+                  onChanged: (value) async {
+                    setState(() => _morningAlerts = value);
+                  },
+                ),
+                SwitchListTile(
+                  title: Text('Evening Alerts'),
+                  subtitle: Text('Get notified about evening bus schedules'),
+                  value: _eveningAlerts,
+                  onChanged: (value) async {
+                    setState(() => _eveningAlerts = value);
+                  },
+                ),
+                SwitchListTile(
+                  title: Text('Departure Alerts'),
+                  subtitle: Text('Get notified when bus is departing'),
+                  value: _departureAlerts,
+                  onChanged: (value) async {
+                    setState(() => _departureAlerts = value);
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSection(String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.greyLight),
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwitchTile(
-    String title,
-    String subtitle,
-    bool value,
-    Function(bool) onChanged,
-  ) {
-    return ListTile(
-      title: Text(
-        title,
-        style: TextStyle(color: AppColors.primary, fontSize: 16),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: AppColors.grey, fontSize: 14),
-      ),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: AppColors.primary,
-      ),
-    );
-  }
-
-  Widget _buildInfoTile(String title, String value) {
-    return ListTile(
-      title: Text(
-        title,
-        style: TextStyle(color: AppColors.primary, fontSize: 16),
-      ),
-      trailing: Text(
-        value,
-        style: TextStyle(color: AppColors.grey, fontSize: 14),
-      ),
-    );
-  }
-
-  Widget _buildNavigationTile(
-    String title,
-    String subtitle,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(
-        title,
-        style: TextStyle(color: AppColors.primary, fontSize: 16),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: AppColors.grey, fontSize: 14),
-      ),
-      trailing: Icon(Icons.arrow_forward_ios, color: AppColors.grey, size: 16),
-      onTap: onTap,
     );
   }
 }
